@@ -13,17 +13,22 @@
 
 package org.eclipse.m2e.tests.launch;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hamcrest.Description;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationType;
@@ -77,8 +82,7 @@ public class MavenRuntimeClasspathProviderTest extends AbstractMavenProjectTestC
   @Test
   public void testAddJUnit5DependenciesWithEngine() throws Exception {
     runAddJunit5DepsTest("551298_add_junit5_deps_withengine", //
-        "junit-jupiter-engine-5.4.2.jar",
-        "apiguardian-api-1.0.0.jar", //
+        "junit-jupiter-engine-5.4.2.jar", "apiguardian-api-1.0.0.jar", //
         "junit-platform-engine-1.4.2.jar", //
         "opentest4j-1.1.1.jar", //
         "junit-platform-commons-1.4.2.jar", //
@@ -102,10 +106,8 @@ public class MavenRuntimeClasspathProviderTest extends AbstractMavenProjectTestC
 
   @Test
   public void testClasspathScopeRuntime() throws Exception {
-    runClasspathScopeTest(
-        "projects/548948_test_scope_jdt_setting", new String[] {"pom.xml",
-            "project-with-launch-configs/pom.xml",
-            "project-with-shared-runtime-code/pom.xml",
+    runClasspathScopeTest("projects/548948_test_scope_jdt_setting",
+        new String[] {"pom.xml", "project-with-launch-configs/pom.xml", "project-with-shared-runtime-code/pom.xml",
             "project-with-shared-test-code/pom.xml"},
         "project-with-launch-configs", true, "/project-with-launch-configs/target/classes",
         "/project-with-shared-runtime-code/target/classes");
@@ -113,48 +115,93 @@ public class MavenRuntimeClasspathProviderTest extends AbstractMavenProjectTestC
 
   @Test
   public void testClasspathScopeTest() throws Exception {
-    runClasspathScopeTest(
-        "projects/548948_test_scope_jdt_setting", new String[] {"pom.xml",
-            "project-with-launch-configs/pom.xml",
-            "project-with-shared-runtime-code/pom.xml",
+    runClasspathScopeTest("projects/548948_test_scope_jdt_setting",
+        new String[] {"pom.xml", "project-with-launch-configs/pom.xml", "project-with-shared-runtime-code/pom.xml",
             "project-with-shared-test-code/pom.xml"},
         "project-with-launch-configs", false, "/project-with-launch-configs/target/test-classes",
         "/project-with-launch-configs/target/classes", "/project-with-shared-runtime-code/target/classes",
         "/project-with-shared-test-code/target/classes");
   }
 
-  private void runClasspathScopeTest(String baseDir, String[] pomNames,
-      String subModuleWithLaunch,
-      boolean useRuntimeScope,
-      String... expectedBinFolders)
-      throws Exception {
+  @Test
+  public void testJUnit4TestWithJUnit5Dependency() throws CoreException, IOException {
+    IProject project = importProject("projects/junit5TestProject/pom.xml");
+    ILaunchConfiguration configuration = getLaunchConfiguration("projects/junit5TestProject",
+        MavenRuntimeClasspathProvider.JDT_JUNIT_TEST);
+    configuration.getAttributes().put(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME,
+        project.getName());
+
+    IRuntimeClasspathEntry[] resolvedClasspathEntries = getResolvedMavenRuntimeClasspath(configuration);
+    // make sure that vintage engine is on the classpath (as being part of the
+    // m-surefire-p classpath)
+    assertThat(Arrays.asList(resolvedClasspathEntries),
+        Matchers.hasItem(new IRuntimeClasspathEntryMatcherByLocationSuffix("junit-vintage-engine-5.14.1.jar")));
+  }
+
+  private void runClasspathScopeTest(String baseDir, String[] pomNames, String subModuleWithLaunch,
+      boolean useRuntimeScope, String... expectedBinDirectories) throws Exception {
     importProjects(baseDir, pomNames, new ResolverConfiguration());
     ILaunchConfiguration configuration = getLaunchConfiguration(baseDir + "/" + subModuleWithLaunch,
         MavenRuntimeClasspathProvider.JDT_JAVA_APPLICATION);
-    configuration.getAttributes().put(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME,
-        subModuleWithLaunch);
+    configuration.getAttributes().put(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, subModuleWithLaunch);
     configuration.getAttributes().put(IJavaLaunchConfigurationConstants.ATTR_EXCLUDE_TEST_CODE, useRuntimeScope);
+    IRuntimeClasspathEntry[] resolvedClasspath = getResolvedMavenRuntimeClasspath(configuration);
+    assertClasspathContainsDirectories(resolvedClasspath, expectedBinDirectories);
+  }
+
+  /**
+   * @param configuration
+   * @return
+   * @throws CoreException
+   */
+  private IRuntimeClasspathEntry[] getResolvedMavenRuntimeClasspath(ILaunchConfiguration configuration)
+      throws CoreException {
     MavenRuntimeClasspathProvider mavenRuntimeClasspathProvider = new MavenRuntimeClasspathProvider();
     IRuntimeClasspathEntry[] unresolved = mavenRuntimeClasspathProvider.computeUnresolvedClasspath(configuration);
-    IRuntimeClasspathEntry[] resolvedClasspath = mavenRuntimeClasspathProvider.resolveClasspath(unresolved,
+    return mavenRuntimeClasspathProvider.resolveClasspath(unresolved,
         configuration);
-    assertResolveClasspathEndsWithFolders(resolvedClasspath, expectedBinFolders);
+  }
+
+  /**
+   * Matcher for {@link IRuntimeClasspathEntry} that matches by filename/path suffix against its location
+   */
+  static final class IRuntimeClasspathEntryMatcherByLocationSuffix extends TypeSafeMatcher<IRuntimeClasspathEntry> {
+
+    private final String locationSuffix;
+
+    public IRuntimeClasspathEntryMatcherByLocationSuffix(String filename) {
+      this.locationSuffix = filename;
+    }
+
+    @Override
+    public void describeTo(Description description) {
+      description.appendText("IRuntimeClasspathEntry with location ending with ").appendValue(locationSuffix);
+    }
+
+    @Override
+    protected void describeMismatchSafely(IRuntimeClasspathEntry item, Description mismatchDescription) {
+      mismatchDescription.appendText("was IRuntimeClasspathEntry with location ")
+          .appendValue(item.getLocation());
+    }
+
+    @Override
+    protected boolean matchesSafely(IRuntimeClasspathEntry item) {
+      return item.getLocation() != null && item.getLocation().endsWith(locationSuffix);
+    }
   }
 
   /**
    * @param classpathEntries array of classpath entries to check
-   * @param expectedBinFolders list of binary folders we expect to find
+   * @param expectedBinDirectories list of directories containing class files we expect to find
    */
-  private void assertResolveClasspathEndsWithFolders(
-      IRuntimeClasspathEntry[] classpathEntries,
-      String[] expectedBinFolders) {
-    int delta = classpathEntries.length - expectedBinFolders.length;
-    assertTrue(delta >= 0);
-    for(int j = 0; j < expectedBinFolders.length; j++ ) {
-      String location = classpathEntries[j + delta].getLocation();
-      String binFolder = expectedBinFolders[j].replace('/', File.separatorChar);
-      assertTrue("got " + location + " but expected something ending with " + binFolder, location.endsWith(binFolder));
-    }
+  private void assertClasspathContainsDirectories(IRuntimeClasspathEntry[] classpathEntries,
+      String[] expectedBinDirectories) {
+
+    IRuntimeClasspathEntryMatcherByLocationSuffix[] binClasspathEntryMatchers = Arrays.stream(expectedBinDirectories)
+        .map(folder -> new IRuntimeClasspathEntryMatcherByLocationSuffix(folder.replace('/', File.separatorChar)))
+        .toArray(IRuntimeClasspathEntryMatcherByLocationSuffix[]::new);
+    MatcherAssert.assertThat("Resolved classpath does not contain the binary class directories",
+        Arrays.asList(classpathEntries), Matchers.hasItems(binClasspathEntryMatchers));
   }
 
   private void runAddJunit5DepsTest(String projectName, String... expectedJars) throws IOException, CoreException {
@@ -163,31 +210,20 @@ public class MavenRuntimeClasspathProviderTest extends AbstractMavenProjectTestC
         MavenRuntimeClasspathProvider.JDT_JUNIT_TEST);
     configuration.getAttributes().put("org.eclipse.jdt.junit.TEST_KIND", "org.eclipse.jdt.junit.loader.junit5");
     configuration.getAttributes().put(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, projectName);
-    MavenRuntimeClasspathProvider mavenRuntimeClasspathProvider = new MavenRuntimeClasspathProvider();
-    IRuntimeClasspathEntry[] unresolved = mavenRuntimeClasspathProvider.computeUnresolvedClasspath(configuration);
-    IRuntimeClasspathEntry[] resolveClasspath = mavenRuntimeClasspathProvider.resolveClasspath(unresolved,
-        configuration);
-    assertResolveClasspathEndsWithJars(resolveClasspath, expectedJars);
+    IRuntimeClasspathEntry[] resolvedClasspath = getResolvedMavenRuntimeClasspath(configuration);
+    assertClasspathContainsJars(resolvedClasspath, expectedJars);
   }
 
   /**
-   * @param resolveClasspath
+   * @param classpathEntries
    * @param jars
    */
-  private void assertResolveClasspathEndsWithJars(IRuntimeClasspathEntry[] resolveClasspath, String... jars) {
-    int i;
-    // start looking after classes directory;
-    for(i = resolveClasspath.length; i > 0; i-- ) {
-      if(resolveClasspath[i - 1].getLocation().endsWith("classes")) {
-        break;
-      }
-    }
-    for(int j = 0; j < Math.min(jars.length, resolveClasspath.length - i); j++ ) {
-      String location = resolveClasspath[j + i].getLocation();
-      String jar = jars[j];
-      assertTrue("got " + location + " but expected something ending with " + jar, location.endsWith(jar));
-    }
-    assertEquals(jars.length, resolveClasspath.length - i);
+  private void assertClasspathContainsJars(IRuntimeClasspathEntry[] classpathEntries, String... jars) {
+    IRuntimeClasspathEntryMatcherByLocationSuffix[] binClasspathEntryMatchers = Arrays.stream(jars)
+        .map(folder -> new IRuntimeClasspathEntryMatcherByLocationSuffix(folder.replace('/', File.separatorChar)))
+        .toArray(IRuntimeClasspathEntryMatcherByLocationSuffix[]::new);
+    MatcherAssert.assertThat("Resolved classpath does not contain the binary class directories",
+        Arrays.asList(classpathEntries), Matchers.hasItems(binClasspathEntryMatchers));
   }
 
   private ILaunchConfiguration getLaunchConfiguration(String pomDirectory, String type) throws CoreException {
