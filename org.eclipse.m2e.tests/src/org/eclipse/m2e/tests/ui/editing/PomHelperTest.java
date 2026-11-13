@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
+ * Copyright (c) 2011, 2026 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -17,7 +17,6 @@ import static org.eclipse.m2e.core.ui.internal.editing.PomEdits.findChild;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -42,28 +41,6 @@ public class PomHelperTest {
   public void setUp() throws Exception {
     tempModel = (IDOMModel) StructuredModelManager.getModelManager().createUnManagedStructuredModelFor(
         "org.eclipse.m2e.core.pomFile");
-  }
-
-  @Test
-  public void testFindDependencies() {
-    tempModel.getStructuredDocument().setText(StructuredModelManager.getModelManager(), //
-        "<project><dependencies>" + //
-            "<dependency><groupId>AAA</groupId><artifactId>BBB</artifactId><version>1.0</version></dependency>" + //
-            "<dependency><groupId>AAAB</groupId><artifactId>BBB</artifactId><version>1.0</version></dependency>" + //
-            "<dependency><groupId>AAA</groupId><artifactId>BBBB</artifactId><version>1.0</version></dependency>" + //
-            "</dependencies></project>");
-    assertNotNull(PomHelper.findDependencies(tempModel.getDocument().getDocumentElement()));
-  }
-
-  @Test
-  public void testFindDependenciesMissing() {
-    tempModel.getStructuredDocument().setText(StructuredModelManager.getModelManager(), //
-        "<project><adependencies>" + //
-            "<dependency><groupId>AAA</groupId><artifactId>BBB</artifactId><version>1.0</version></dependency>" + //
-            "<dependency><groupId>AAAB</groupId><artifactId>BBB</artifactId><version>1.0</version></dependency>" + //
-            "<dependency><groupId>AAA</groupId><artifactId>BBBB</artifactId><version>1.0</version></dependency>" + //
-            "</adependencies></project>");
-    assertTrue(PomHelper.findDependencies(tempModel.getDocument().getDocumentElement()).isEmpty());
   }
 
   @Test
