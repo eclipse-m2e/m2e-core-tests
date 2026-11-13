@@ -27,7 +27,7 @@ jobs:
         submodules: true
         repository: 'eclipse-m2e/m2e-core'
         ref: 'main'
-    - uses: actions/setup-java@v4
+    - uses: actions/setup-java@v6
       with:
         java-version: '21'
         distribution: 'temurin'
