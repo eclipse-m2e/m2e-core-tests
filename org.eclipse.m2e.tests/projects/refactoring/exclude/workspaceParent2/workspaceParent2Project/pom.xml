@@ -17,6 +17,21 @@
 
 	<packaging>pom</packaging>
 	
+	<dependencyManagement>
+		<dependencies>
+			<!-- versions without known vulnerabilities of dependencies of commons-digester 1.6 -->
+			<dependency>
+				<groupId>commons-beanutils</groupId>
+				<artifactId>commons-beanutils</artifactId>
+				<version>1.11.0</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-collections</groupId>
+				<artifactId>commons-collections</artifactId>
+				<version>3.2.2</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 		<dependency>
 		  <groupId>commons-digester</groupId>
