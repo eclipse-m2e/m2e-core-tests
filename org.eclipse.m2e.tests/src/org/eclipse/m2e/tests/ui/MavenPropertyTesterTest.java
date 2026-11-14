@@ -17,7 +17,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -25,11 +24,10 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.m2e.core.project.ResolverConfiguration;
 import org.eclipse.m2e.core.ui.internal.actions.MavenPropertyTester;
 import org.eclipse.m2e.tests.common.AbstractMavenProjectTestCase;
-import org.eclipse.m2e.tests.common.MavenRunner;
 import org.eclipse.m2e.tests.common.RequireMavenExecutionContext;
 
 
-@RunWith(MavenRunner.class)
+@RequireMavenExecutionContext
 public class MavenPropertyTesterTest extends AbstractMavenProjectTestCase {
 
   private static final String IS_BUILD_DIRECTORY = "isBuildDirectory"; //$NON-NLS-1$
