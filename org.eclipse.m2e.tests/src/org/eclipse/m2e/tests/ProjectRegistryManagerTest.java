@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008-2014 Sonatype, Inc. and others
+ * Copyright (c) 2008-2026 Sonatype, Inc. and others
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -679,7 +679,7 @@ public class ProjectRegistryManagerTest extends AbstractMavenProjectTestCase {
     IProject p1 = createExisting("t012-p1");
     waitForJobsToComplete();
 
-    File jar = new File(repo + "/org/apache/logging/log4j/log4j-core/2.17.1", "log4-core-2.17-1.jar").getAbsoluteFile();
+    File jar = new File(repo + "/org/apache/logging/log4j/log4j-core/2.26.1", "log4j-core-2.26.1.jar").getAbsoluteFile();
 //    assertTrue(jar.exists());
 
     jar.delete();
