@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2020 Sonatype, Inc.
+ * Copyright (c) 2008, 2026 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -346,9 +346,9 @@ public class BuildPathManagerTest extends AbstractMavenProjectTestCase {
     assertEquals(7, cp.length);
     assertEquals("junit-4.13.1.jar", cp[0].getPath().lastSegment());
     assertEquals("commons-digester-1.6.jar", cp[2].getPath().lastSegment());
-    assertEquals("commons-beanutils-1.6.jar", cp[3].getPath().lastSegment());
+    assertEquals("commons-beanutils-1.11.0.jar", cp[3].getPath().lastSegment());
     assertEquals("commons-logging-1.0.jar", cp[4].getPath().lastSegment());
-    assertEquals("commons-collections-2.1.jar", cp[5].getPath().lastSegment());
+    assertEquals("commons-collections-3.2.2.jar", cp[5].getPath().lastSegment());
     assertEquals("xml-apis-1.0.b2.jar", cp[6].getPath().lastSegment());
   }
 
