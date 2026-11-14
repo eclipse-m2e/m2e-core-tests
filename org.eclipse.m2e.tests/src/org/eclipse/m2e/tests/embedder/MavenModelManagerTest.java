@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008-2010 Sonatype, Inc.
+ * Copyright (c) 2008-2026 Sonatype, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -23,7 +23,6 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.util.artifact.JavaScopes;
@@ -47,11 +46,10 @@ import org.eclipse.m2e.core.project.IMavenProjectFacade;
 import org.eclipse.m2e.core.project.ResolverConfiguration;
 import org.eclipse.m2e.model.edit.pom.util.PomResourceImpl;
 import org.eclipse.m2e.tests.common.AbstractMavenProjectTestCase;
-import org.eclipse.m2e.tests.common.MavenRunner;
 import org.eclipse.m2e.tests.common.RequireMavenExecutionContext;
 
 
-@RunWith(MavenRunner.class)
+@RequireMavenExecutionContext
 public class MavenModelManagerTest extends AbstractMavenProjectTestCase {
 
   private static final String TEST_PROJECT_NAME = "editor-tests";
@@ -154,7 +152,7 @@ public class MavenModelManagerTest extends AbstractMavenProjectTestCase {
 
     DependencyNode plexusUtilsA = depA.getChildren().get(0);
     assertEquals("plexus-utils", plexusUtilsA.getArtifact().getArtifactId());
-    assertEquals("2.0.5", plexusUtilsA.getArtifact().getVersion());
+    assertEquals("3.6.2", plexusUtilsA.getArtifact().getVersion());
     assertEquals(JavaScopes.COMPILE, plexusUtilsA.getDependency().getScope());
 
     DependencyNode junitA = depA.getChildren().get(1);
@@ -172,7 +170,7 @@ public class MavenModelManagerTest extends AbstractMavenProjectTestCase {
 
     DependencyNode plexusUtilsB = depB.getChildren().get(0);
     assertEquals("plexus-utils", plexusUtilsB.getArtifact().getArtifactId());
-    assertEquals("3.0", plexusUtilsB.getArtifact().getVersion());
+    assertEquals("4.0.3", plexusUtilsB.getArtifact().getVersion());
     assertEquals(plexusUtilsA.getArtifact(),
         ((DependencyNode) plexusUtilsB.getData().get(ConflictResolver.NODE_DATA_WINNER)).getArtifact());
   }
